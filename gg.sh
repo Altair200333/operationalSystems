@@ -5,4 +5,4 @@ git add .
 git commit -m "commit"
 git push -u origin master
 
-send "altair200333"
+printf "altair200333"
