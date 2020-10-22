@@ -9,13 +9,11 @@ void printUserAndGroupIds()
   printf("real user ID: %d, effective user ID %d\n", getuid(), geteuid());
   printf("real group ID: %d, effective group ID %d\n", getgid(), getegid());
 }
-void setLeader(char* arg)
+void setLeader()
 {
-  int proc = atoi(arg);
-  printf("setting process %d to be leader of a new group\n", proc);
-  int res = setpgid(proc, proc);
-  if(res == 0)
-    printf("succeed\n");
+  int res = setsid();
+  if(res != -1)
+    printf("succeed; id = %d\n", res);
   else
     printf("failed\n");
 }
@@ -95,14 +93,14 @@ int main (int argc, char **argv, char **envp)
  int c;
  while(optind < argc)
   {
-   if((c = getopt (argc, argv, "is:puU:dvV:cC:")) != -1)
+   if((c = getopt (argc, argv, "ispuU:dvV:cC:")) != -1)
     switch (c)
       {
       case 'i':
         printUserAndGroupIds();
         break;
       case 's':
-        setLeader(optarg);
+        setLeader();
         break;
       case 'p':
         processId();

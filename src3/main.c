@@ -7,7 +7,7 @@
 int try()
 {
 	printf("The real user ID is %d\n", getuid());
-    printf("The effective user ID is %d\n", geteuid());
+        printf("The effective user ID is %d\n", geteuid());
 
 	FILE* f = fopen(path, "r");
 	if(f == NULL)
@@ -27,10 +27,12 @@ int main()
 	int res = try();
 	if (res == 0)
 	{
-		setuid(getuid());
+		int res = setuid(getuid());
+		if(res != 0)
+			printf("Failed to set effective uid\n");
 		try();
 	}
-	
+
 	return 0;
 }
 

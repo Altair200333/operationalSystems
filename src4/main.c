@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define maxLength 255
+#define maxLength  5
 
 typedef struct 
 {
@@ -38,7 +38,7 @@ int append(char* string, List** list)
 		List* newItem = createList();
 		if (newItem == NULL)
 			return -1;
-		
+
 		newItem->string = string;
 		current->next = (struct List*)newItem;
 	}
@@ -60,14 +60,15 @@ void dispose(List* list)
 int main()
 {
 	char text[maxLength];
-	
+
 	List* list = NULL;
 
 	printf("Type words, when you are done type '.' :\n");
 	while (*(fgets(text, maxLength, stdin)) != '.')
-	{	
-		const size_t length = strlen(text);
-	
+	{
+		size_t length = strlen(text);
+		length += text[length-1] != '\n';
+
 		char* truncated = (char*)malloc(length);
 		if (truncated != NULL)
 		{
@@ -80,8 +81,13 @@ int main()
 				return 1;
 			}
 		}
+		else
+		{
+		  dispose(list);
+		  return 1;
+		}
 	}
-	
+
 	List* current = list;
 	while(current != NULL)
 	{
