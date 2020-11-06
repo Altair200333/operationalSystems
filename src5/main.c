@@ -7,7 +7,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-typedef struct {
+typedef struct
+{
     size_t* array;
     size_t size;
     size_t capacity;
@@ -74,12 +75,6 @@ int main()
     	}
         ++position;
         res = read(file, &c, 1);
-	printf("%c", c);
-    }
-
-    for(int i=0;i<arr->size;++i)
-    {
-        printf("%zu \n", arr->array[i]);
     }
 
     bool exit = false;
@@ -87,38 +82,42 @@ int main()
     {
         printf("Input string number (-1 to exit): ");
         int strNumber;
-        scanf("%d", &strNumber);
+        if(scanf("%d", &strNumber) != 1)
+	{
+	    printf("Incorrect input\n");
+	    continue;
+	}
         if (strNumber == -1)
             exit = true;
     	else
     	{
-    		if(strNumber<0 || strNumber >= arr->size)
+    	        if(strNumber<0 || strNumber >= arr->size)
     		{
                     printf("Out of range\n");
     		}
     		else
     		{
-                size_t start;
-                size_t end;
-                if(strNumber == 0)
-                {
-                    start = 0;
-                    end = arr->array[0];
-                }
-    		else
-    		{
-                    start = arr->array[strNumber - 1];
-                    end = arr->array[strNumber];
-  		}
-                //lseek(file, start, SEEK_SET);
-                for(int i=start;i<end;++i)
-		{
-                    lseek(file, i, SEEK_SET);
-		    char c;
-	            read(file, &c, 1);
-                    printf("%c", c);
-		}
-            }
+                    size_t start;
+                    size_t end;
+                    if(strNumber == 0)
+                    {
+                        start = 0;
+                        end = arr->array[0];
+                    }
+    		    else
+    		    {
+                        start = arr->array[strNumber - 1];
+                        end = arr->array[strNumber];
+  		    }
+
+                    for(int i=start;i<end;++i)
+		    {
+                        lseek(file, i, SEEK_SET);
+		        char c;
+	                read(file, &c, 1);
+                        printf("%c", c);
+		    }
+               }
     	}
     }
 
