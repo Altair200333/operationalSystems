@@ -10,14 +10,6 @@
 #include <sys/select.h>
 #include <string.h>
 
-double dtime()
-{
-   struct timeval  tv;
-   gettimeofday(&tv, NULL);
-
-   double time_in_mill = (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ;
-   return time_in_mill;
-}
 typedef struct {
     size_t* array;
     size_t size;
@@ -37,7 +29,6 @@ int main()
     if (file == -1)
     {
         printf("File can't be read\n");
-        getchar();
         return 1;
     }
 
@@ -45,30 +36,38 @@ int main()
     if(arr == NULL)
     {
         printf("Memory allocation failed\n");
-        getchar();
         return 1;
     }
 
-    size_t position = 0;
-    char c;
-    int res = read(file, &c, 1);
-
-    while (res != 0)
+    off_t seekPos = lseek(file, 0, SEEK_END);
+    if (seekPos == (off_t)-1)
     {
-        if(c == '\n')
+        printf("Failed to seek file\n");
+        close(file);
+        freeArray(arr);
+        return 1;
+    }
+
+    int len = (int)seekPos + 1;
+    lseek(file, 0, SEEK_SET);
+
+    char* buffer = (char*)malloc(len);
+    if(buffer == NULL)
+    {
+        printf("Unable to allocate buffer to save file in\n");
+        close(file);
+        freeArray(arr);
+        return 1;
+    }
+    read(file, buffer, len);
+    for(int i = 0; i < len; ++i)
+    {
+        if(buffer[i] == '\n')
         {
-            //printf("Add\n");
-            add(arr, position+1);
+            add(arr,i+1);
         }
-        ++position;
-        res = read(file, &c, 1);
-        printf("%c", c);
     }
-
-    for(int i=0;i<arr->size;++i)
-    {
-        printf("%zu \n", arr->array[i]);
-    }
+    free(buffer);
 
     //----------------------
 
@@ -100,34 +99,32 @@ int main()
     //---
     if(oot == false)
     {
-        int pos = 0;
-        char buf[20];
-        while(1)
+        bool exit = false;
+        while (!exit)
         {
-            pos = 0;
-            for(int i=0;i<20;++i)
-                buf[i] = '\0';
-
-            char ch;
-            while((ch = getchar()) != '\n')
+            int strNumber;
+            if(scanf("%d", &strNumber) != 1)
             {
-                buf[pos++] = ch;
+                int c;
+                while((c = getchar()) != '\n' && c != EOF);
+                printf("Incorrect input\n");
+                continue;
             }
-            int val = atoi(buf);
-            if(val == -1)
-                break;
-            //printf("%d\n", val);
-            printLine(arr, val, file);
+            if (strNumber == -1)
+                exit = true;
+            else
+                printLine(arr, strNumber, file);
         }
     }
-
+    freeArray(arr);
+    close(file);
     return 0;
 }
 void printLine(Array* arr, int strNumber, int file)
 {
     if(strNumber<0 || strNumber >= arr->size)
     {
-            printf("Out of range\n");
+        printf("Out of range\n");
     }
     else
     {
@@ -159,6 +156,11 @@ Array* createArray(size_t initialSize)
     if (a == NULL)
         return a;
     a->array = (size_t*)malloc(initialSize * sizeof(size_t));
+    if(a->array == NULL)
+    {
+        free(a);
+        return NULL;
+    }
     a->size = 0;
     a->capacity = initialSize;
 
