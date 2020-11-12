@@ -20,6 +20,11 @@ Array* createArray(size_t initialSize)
     if (a == NULL)
         return a;
     a->array = (size_t*)malloc(initialSize * sizeof(size_t));
+    if(a->array == NULL)
+    {
+        free(a);
+        return NULL;
+    }
     a->size = 0;
     a->capacity = initialSize;
 
@@ -28,7 +33,7 @@ Array* createArray(size_t initialSize)
 
 void add(Array* a, size_t element)
 {
-    if (a->size == a->capacity) 
+    if (a->size == a->capacity)
     {
         a->capacity *= 2;
         size_t* data = (size_t*)realloc(a->array, a->capacity * sizeof(size_t));
@@ -39,7 +44,8 @@ void add(Array* a, size_t element)
     a->array[a->size++] = element;
 }
 
-void freeArray(Array* a) {
+void freeArray(Array* a)
+{
     free(a->array);
     a->array = NULL;
     a->size = a->capacity = 0;
@@ -59,65 +65,84 @@ int main()
     if(arr == NULL)
     {
         printf("Memory allocation failed\n");
+        close(file);
         return 1;
     }
 
-    size_t position = 0;
-    char c;
-    int res = read(file, &c, 1);
-
-    while (res != 0)
+    off_t seekPos = lseek(file, 0, SEEK_END);
+    if (seekPos == (off_t)-1)
     {
-    	if(c == '\n')
-    	{
-	    //printf("Add\n");
-            add(arr, position+1);
-    	}
-        ++position;
-        res = read(file, &c, 1);
+        printf("Failed to seek file\n");
+        close(file);
+        freeArray(arr);
+        return 1;
     }
 
+    int len = (int)seekPos + 1;
+    printf("len %d \n", len);
+    lseek(file, 0, SEEK_SET);
+
+    char* buffer = (char*)malloc(len);
+    if(buffer = NULL)
+    {
+        printf("Unable to allocate buffer to save file in\n");
+        close(file);
+        freeArray(arr);
+        return 1;
+    }
+    read(file, buffer, len);
+    for(size_t i = 0; i < len; ++i)
+    {
+    	if(buffer[i] == '\n')
+    	{
+            add(arr,i+1);
+    	}
+    }
+
+    free(buffer); //we don't need it anymore
     bool exit = false;
     while (!exit)
     {
         printf("Input string number (-1 to exit): ");
         int strNumber;
         if(scanf("%d", &strNumber) != 1)
-	{
-	    printf("Incorrect input\n");
-	    continue;
-	}
+	    {
+            int c;
+            while((c = getchar()) != '\n' && c != EOF);
+	        printf("Incorrect input\n");
+	        continue;
+	    }
         if (strNumber == -1)
             exit = true;
     	else
     	{
-    	        if(strNumber<0 || strNumber >= arr->size)
+    	    if(strNumber<0 || strNumber >= arr->size)
     		{
-                    printf("Out of range\n");
+                printf("Out of range\n");
     		}
     		else
     		{
-                    size_t start;
-                    size_t end;
-                    if(strNumber == 0)
-                    {
-                        start = 0;
-                        end = arr->array[0];
-                    }
+                size_t start;
+                size_t end;
+                if(strNumber == 0)
+                {
+                    start = 0;
+                    end = arr->array[0];
+                }
     		    else
     		    {
-                        start = arr->array[strNumber - 1];
-                        end = arr->array[strNumber];
-  		    }
+                    start = arr->array[strNumber - 1];
+                    end = arr->array[strNumber];
+  		        }
 
-                    for(int i=start;i<end;++i)
-		    {
-                        lseek(file, i, SEEK_SET);
-		        char c;
+                for(int i=start;i<end;++i)
+		        {
+                    lseek(file, i, SEEK_SET);
+		            char c;
 	                read(file, &c, 1);
-                        printf("%c", c);
-		    }
-               }
+                    printf("%c", c);
+		        }
+            }
     	}
     }
 
