@@ -79,6 +79,7 @@ int main()
     }
 
     int len = (int)seekPos + 1;
+    printf("len %d \n", len);
     lseek(file, 0, SEEK_SET);
 
     char* buffer = (char*)malloc(len);
@@ -90,13 +91,14 @@ int main()
         return 1;
     }
     read(file, buffer, len);
-    for(int i = 0; i < len; ++i)
+    for(size_t i = 0; i < len; ++i)
     {
     	if(buffer[i] == '\n')
     	{
             add(arr,i+1);
     	}
     }
+
     free(buffer); //we don't need it anymore
     bool exit = false;
     while (!exit)
