@@ -140,13 +140,11 @@ void printLine(Array* arr, int strNumber, int file)
             start = arr->array[strNumber - 1];
             end = arr->array[strNumber];
         }
-        for(int i=start;i<end;++i)
-        {
-            lseek(file, i, SEEK_SET);
-            char c;
-            read(file, &c, 1);
-            printf("%c", c);
-        }
+        lseek(file, start, SEEK_SET);
+        char str[255];
+        read(file, str, end - start);
+        str[end - start - 1] = '\0';
+        printf("%s\n", str);
     }
 }
 
