@@ -32,7 +32,7 @@ Array* createArray(size_t initialSize)
     return a;
 }
 
-void add(Array* a, size_t element)
+bool add(Array* a, size_t element)
 {
     if (a->size == a->capacity)
     {
@@ -41,11 +41,12 @@ void add(Array* a, size_t element)
     	if(data == NULL)
         {
             a->capacity /= 2;
-            return;
+            return false;
         }
         a->array = data;
     }
     a->array[a->size++] = element;
+    return true;
 }
 
 void freeArray(Array* a)
@@ -106,7 +107,14 @@ int main()
     {
     	if(buffer[i] == '\n')
     	{
-            add(arr,i+1);
+            if(!add(arr,i+1))
+            {
+                printf("failed to allocate array\n");
+                close(file);
+                freeArray(arr);
+                free(buffer);
+                return 1;
+            }
     	}
     }
     free(buffer); //we don't need it anymore

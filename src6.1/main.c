@@ -9,6 +9,7 @@
 #include <stropts.h>
 #include <sys/select.h>
 #include <string.h>
+#include <errno.h>
 
 typedef struct {
     size_t* array;
@@ -17,9 +18,9 @@ typedef struct {
 } Array;
 
 Array* createArray(size_t initialSize);
-void add(Array* a, size_t element);
+bool add(Array* a, size_t element);
 void freeArray(Array* a);
-void printLine(Array* arr, int strNumber, int file);
+bool printLine(Array* arr, int strNumber, int file);
 
 int main()
 {
@@ -59,28 +60,34 @@ int main()
         freeArray(arr);
         return 1;
     }
-    read(file, buffer, len);
+    size_t readSize = read(file, buffer, len);
+    if (readSize == -1 && errno != EINTR)
+    {
+        close(file);
+        freeArray(arr);
+        free(buffer);
+        return 1;
+    }
     for(int i = 0; i < len; ++i)
     {
         if(buffer[i] == '\n')
         {
-            add(arr,i+1);
+            if(!add(arr,i+1))
+            {
+                freeArray(arr);
+                close(file);
+                free(buffer);
+                return 1;
+            }
         }
     }
     free(buffer);
 
-    //----------------------
-
     printf("You have 5 seconds to start input\n");
 
     bool oot = false;
-    //---
-
     fd_set rfds;
     struct timeval tv;
-    int retval;
-
-    /* Watch stdin (fd 0) to see when it has input. */
 
     FD_ZERO(&rfds);
     FD_SET(0, &rfds);
@@ -89,12 +96,16 @@ int main()
 
     tv.tv_sec = 5;
     tv.tv_usec = 0;
-
-    retval = select(1, &rfds, NULL, NULL, &tv);
+    int maxFD = 0;
+    int retval = select(maxFD + 1, &rfds, NULL, NULL, &tv);
     if(retval == 0)
     {
         printf("Out of time\n");
         oot = true;
+    }
+    else if(retval == -1)
+    {
+        printf("Error occured in select\n");
     }
     //---
     if(oot == false)
@@ -113,14 +124,21 @@ int main()
             if (strNumber == -1)
                 exit = true;
             else
-                printLine(arr, strNumber, file);
+            {
+               if (!printLine(arr, strNumber, file))
+               {
+                    freeArray(arr);
+                    close(file);
+                    return 1;
+               }
+            }
         }
     }
     freeArray(arr);
     close(file);
     return 0;
 }
-void printLine(Array* arr, int strNumber, int file)
+bool printLine(Array* arr, int strNumber, int file)
 {
     if(strNumber<0 || strNumber >= arr->size)
     {
@@ -142,10 +160,16 @@ void printLine(Array* arr, int strNumber, int file)
         }
         lseek(file, start, SEEK_SET);
         char str[255];
-        read(file, str, end - start);
+
+        size_t readSize = read(file, str, end - start);
+        if (readSize == -1 && errno != EINTR)
+        {
+            return false;
+        }
         str[end - start - 1] = '\0';
         printf("%s\n", str);
     }
+    return true;
 }
 
 Array* createArray(size_t initialSize)
@@ -165,17 +189,20 @@ Array* createArray(size_t initialSize)
     return a;
 }
 
-void add(Array* a, size_t element)
+bool add(Array* a, size_t element)
 {
     if (a->size == a->capacity) 
     {
         a->capacity *= 2;
         size_t* data = (size_t*)realloc(a->array, a->capacity * sizeof(size_t));
         if(data == NULL)
-            return;
+        {
+            return false;
+        }
         a->array = data;
     }
     a->array[a->size++] = element;
+    return true;
 }
 
 void freeArray(Array* a) {
