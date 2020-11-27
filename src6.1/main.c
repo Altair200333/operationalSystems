@@ -190,11 +190,8 @@ bool printLine(Array* arr, int strNumber, int file)
         lseek(file, start, SEEK_SET);
         char str[255];
 
-        size_t readSize = read(file, str, end - start);
-        if (readSize == -1 && errno != EINTR)
-        {
+        if (!tryReadFile(file, str, end - start))
             return false;
-        }
         str[end - start - 1] = '\0';
         printf("%s\n", str);
     }
@@ -220,7 +217,7 @@ Array* createArray(size_t initialSize)
 
 bool add(Array* a, size_t element)
 {
-    if (a->size == a->capacity) 
+    if (a->size == a->capacity)
     {
         a->capacity *= 2;
         size_t* data = (size_t*)realloc(a->array, a->capacity * sizeof(size_t));
