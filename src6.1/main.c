@@ -21,7 +21,14 @@ Array* createArray(size_t initialSize);
 bool add(Array* a, size_t element);
 void freeArray(Array* a);
 bool printLine(Array* arr, int strNumber, int file);
-
+void closeF(int fd)
+{
+    int ret = close(fd);
+    if(ret == 1)
+    {
+        printf("Could not close file\n");
+    }
+}
 int main()
 {
 
@@ -37,6 +44,7 @@ int main()
     if(arr == NULL)
     {
         printf("Memory allocation failed\n");
+        closeF(file);
         return 1;
     }
 
@@ -44,7 +52,7 @@ int main()
     if (seekPos == (off_t)-1)
     {
         printf("Failed to seek file\n");
-        close(file);
+        closeF(file);
         freeArray(arr);
         return 1;
     }
@@ -56,14 +64,14 @@ int main()
     if(buffer == NULL)
     {
         printf("Unable to allocate buffer to save file in\n");
-        close(file);
+        closeF(file);
         freeArray(arr);
         return 1;
     }
     size_t readSize = read(file, buffer, len);
     if (readSize == -1 && errno != EINTR)
     {
-        close(file);
+        closeF(file);
         freeArray(arr);
         free(buffer);
         return 1;
@@ -75,7 +83,7 @@ int main()
             if(!add(arr,i+1))
             {
                 freeArray(arr);
-                close(file);
+                closeF(file);
                 free(buffer);
                 return 1;
             }
@@ -128,7 +136,7 @@ int main()
                if (!printLine(arr, strNumber, file))
                {
                     freeArray(arr);
-                    close(file);
+                    closeF(file);
                     return 1;
                }
             }
