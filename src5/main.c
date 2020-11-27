@@ -6,6 +6,7 @@
 #include "unistd.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 
 typedef struct
 {
@@ -38,7 +39,10 @@ void add(Array* a, size_t element)
         a->capacity *= 2;
         size_t* data = (size_t*)realloc(a->array, a->capacity * sizeof(size_t));
     	if(data == NULL)
+        {
+            a->capacity /= 2;
             return;
+        }
         a->array = data;
     }
     a->array[a->size++] = element;
@@ -89,7 +93,15 @@ int main()
         freeArray(arr);
         return 1;
     }
-    read(file, buffer, len);
+    size_t readCnt = read(file, buffer, len);
+    if (readCnt == -1 && errno != EINTR)
+    {
+        close(file);
+        freeArray(arr);
+        free(buffer);
+        printf("failed to read\n");
+        return 1;
+    }
     for(int i = 0; i < len; ++i)
     {
     	if(buffer[i] == '\n')
@@ -134,7 +146,15 @@ int main()
   		        }
                 lseek(file, start, SEEK_SET);
                 char str[255];
-                read(file, str, end - start);
+
+                size_t readC = read(file, str, end - start);
+                if (readC == -1 && errno != EINTR)
+                {
+                    printf("failed to read line\n");
+                    freeArray(arr);
+                    close(file);
+                    return 0;
+                }
                 str[end - start - 1] = '\0';
                 printf("%s\n", str);
             }
