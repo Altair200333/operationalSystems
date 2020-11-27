@@ -24,10 +24,34 @@ bool printLine(Array* arr, int strNumber, int file);
 void closeF(int fd)
 {
     int ret = close(fd);
-    if(ret == 1)
+    if(ret == -1)
     {
         printf("Could not close file\n");
     }
+}
+bool tryReadFile(int file, char* buffer, size_t len)
+{
+    int attempts = 10;
+    for(int i=0; i<attempts; ++i)
+    {
+        size_t readSize = read(file, buffer, len);
+        if (readSize == -1 && errno != EINTR)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            else
+            {
+                printf("failed to read\n");
+                return false;
+            }
+        }
+        else if(readSize != -1)
+            return true;
+    }
+    printf("Out of read attempts\n");
+    return false;
 }
 int main()
 {
@@ -68,8 +92,7 @@ int main()
         freeArray(arr);
         return 1;
     }
-    size_t readSize = read(file, buffer, len);
-    if (readSize == -1 && errno != EINTR)
+    if (!tryReadFile(file, buffer, len))
     {
         closeF(file);
         freeArray(arr);
@@ -90,7 +113,7 @@ int main()
         }
     }
     free(buffer);
-
+    //start "selecting" from user
     printf("You have 5 seconds to start input\n");
 
     bool oot = false;
@@ -99,9 +122,7 @@ int main()
 
     FD_ZERO(&rfds);
     FD_SET(0, &rfds);
-
     /* Wait up to five seconds. */
-
     tv.tv_sec = 5;
     tv.tv_usec = 0;
     int maxFD = 0;
