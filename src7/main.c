@@ -78,6 +78,7 @@ int main()
         freeArray(arr);
         return 1;
     }
+    closeF(file);
     for(int i = 0; i < len; ++i)
     {
         if(buffer[i] == '\n')
@@ -85,7 +86,6 @@ int main()
             if(!add(arr,i+1))
             {
                 printf("Memory allocation in list failed\n");
-                closeF(file);
                 freeArray(arr);
                 return 1;
             }
@@ -141,7 +141,6 @@ int main()
     }
     munmap(buffer, len);
     freeArray(arr);
-    closeF(file);
     return 0;
 }
 void printLine(Array* arr, int strNumber, char* buffer)
