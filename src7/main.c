@@ -27,10 +27,17 @@ typedef struct {
 } Array;
 
 Array* createArray(size_t initialSize);
-void add(Array* a, size_t element);
+bool add(Array* a, size_t element);
 void freeArray(Array* a);
 void printLine(Array* arr, int strNumber, char* buffer);
-
+void closeF(int fd)
+{
+    int ret = close(fd);
+    if(ret == -1)
+    {
+        printf("Could not close file\n");
+    }
+}
 int main()
 {
 
@@ -55,7 +62,7 @@ int main()
     if (seekPos == (off_t)-1)
     {
         printf("Failed to seek file\n");
-        close(file);
+        closeF(file);
         freeArray(arr);
         return 1;
     }
@@ -67,7 +74,7 @@ int main()
     if(buffer == MAP_FAILED)
     {
         printf("Unable to allocate buffer to save file in\n");
-        close(file);
+        closeF(file);
         freeArray(arr);
         return 1;
     }
@@ -75,7 +82,13 @@ int main()
     {
         if(buffer[i] == '\n')
         {
-            add(arr,i+1);
+            if(!add(arr,i+1))
+            {
+                printf("Memory allocation in list failed\n");
+                closeF(file);
+                freeArray(arr);
+                return 1;
+            }
         }
     }
 
@@ -128,6 +141,7 @@ int main()
     }
     munmap(buffer, len);
     freeArray(arr);
+    closeF(file);
     return 0;
 }
 void printLine(Array* arr, int strNumber, char* buffer)
@@ -169,17 +183,18 @@ Array* createArray(size_t initialSize)
     return a;
 }
 
-void add(Array* a, size_t element)
+bool add(Array* a, size_t element)
 {
     if (a->size == a->capacity) 
     {
         a->capacity *= 2;
         size_t* data = (size_t*)realloc(a->array, a->capacity * sizeof(size_t));
         if(data == NULL)
-            return;
+            return false;
         a->array = data;
     }
     a->array[a->size++] = element;
+    return true;
 }
 
 void freeArray(Array* a) {

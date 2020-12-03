@@ -55,7 +55,38 @@ void freeArray(Array* a)
     a->array = NULL;
     a->size = a->capacity = 0;
 }
-
+void closeF(int fd)
+{
+    int ret = close(fd);
+    if(ret == -1)
+    {
+        printf("Could not close file\n");
+    }
+}
+bool tryReadFile(int file, char* buffer, size_t len)
+{
+    int attempts = 10;
+    for(int i=0; i<attempts; ++i)
+    {
+        size_t readSize = read(file, buffer, len);
+        if (readSize == -1 && errno != EINTR)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            else
+            {
+                printf("failed to read\n");
+                return false;
+            }
+        }
+        else if(readSize != -1)
+            return true;
+    }
+    printf("Out of read attempts\n");
+    return false;
+}
 int main()
 {
     int file = open("f.txt", O_RDONLY);
@@ -70,7 +101,7 @@ int main()
     if(arr == NULL)
     {
         printf("Memory allocation failed\n");
-        close(file);
+        closeF(file);
         return 1;
     }
 
@@ -78,7 +109,7 @@ int main()
     if (seekPos == (off_t)-1)
     {
         printf("Failed to seek file\n");
-        close(file);
+        closeF(file);
         freeArray(arr);
         return 1;
     }
@@ -90,19 +121,18 @@ int main()
     if(buffer == NULL)
     {
         printf("Unable to allocate buffer to save file in\n");
-        close(file);
+        closeF(file);
         freeArray(arr);
         return 1;
     }
-    size_t readCnt = read(file, buffer, len);
-    if (readCnt == -1 && errno != EINTR)
+    if (!tryReadFile(file, buffer, len))
     {
-        close(file);
+        closeF(file);
         freeArray(arr);
         free(buffer);
-        printf("failed to read\n");
         return 1;
     }
+
     for(int i = 0; i < len; ++i)
     {
     	if(buffer[i] == '\n')
@@ -110,7 +140,7 @@ int main()
             if(!add(arr,i+1))
             {
                 printf("failed to allocate array\n");
-                close(file);
+                closeF(file);
                 freeArray(arr);
                 free(buffer);
                 return 1;
@@ -160,7 +190,7 @@ int main()
                 {
                     printf("failed to read line\n");
                     freeArray(arr);
-                    close(file);
+                    closeF(file);
                     return 0;
                 }
                 str[end - start - 1] = '\0';
@@ -170,7 +200,7 @@ int main()
     }
 
     freeArray(arr);
-    close(file);
+    closeF(file);
     return 0;
 }
 
