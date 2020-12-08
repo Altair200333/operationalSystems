@@ -7,10 +7,13 @@
 
 int main(int argc, char* argv[])
 {
-    char* path = "f.txt";
+    if(argc < 2)
+    {
+        printf("Incorrect argument; Usage <exe> [args]\n");
+        return 1;
+    }
 
     pid_t child = fork(); //Zero: Returned to the newly created child process; Positive value: Returned to parent or caller. The value contains process ID of newly created child process;
-
     if (child == -1)
     {
         printf("Failed to fork child process\n");
@@ -19,7 +22,11 @@ int main(int argc, char* argv[])
     int status;
     if (child == 0) //this branch runs in child process
     {
-        execl("/bin/cat", "cat", path, (char*)NULL);
+        /*
+        functions provide an array of pointers to null-terminated strings that represent the argument list available to the new program. The first argument,
+        by convention, should point to the filename associated with the file being executed.
+        */
+        execvp(argv[1], &argv[1]);
         return 0;
     }
     else //this branch runs in parent process
