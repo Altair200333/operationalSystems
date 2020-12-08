@@ -35,7 +35,7 @@ bool tryReadFile(int file, char* buffer, size_t len)
     for(int i=0; i<attempts; ++i)
     {
         size_t readSize = read(file, buffer, len);
-        if (readSize == -1 && errno != EINTR)
+        if (readSize == -1)
         {
             if (errno == EINTR)
             {
