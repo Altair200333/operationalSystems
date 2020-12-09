@@ -24,7 +24,27 @@ int main()
 
     if (file == -1)
     {
-        printf("File can't be read\n");
+        printf("File can't be opened\n");
+        return 1;
+    }
+
+    if (flock(file, LOCK_EX | LOCK_NB) == -1 && errno == EAGAIN)
+    {
+        while (flock(file, LOCK_EX) == -1 && errno == EINTR)
+            printf("attempt to open\n");
+
+        printf("Failed to lock file\n");
+        closeF(file);
+        return 1;
+    }
+
+    int sysRes = system("nano f.txt");
+
+    if (sysRes == -1)
+    {
+        printf("Failed to execute child process\n");
+        closeF(file);
+        flock(file, LOCK_UN);
         return 1;
     }
 
