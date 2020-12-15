@@ -4,27 +4,60 @@
 #include <unistd.h>
 #include <wait.h>
 #include <sys/types.h>
+#include <ctype.h>
+#include <string.h>
 
+void closePipe(int* pipes)
+{
+    close(pipes[0]);
+    close(pipes[1]);
+}
 int main(int argc, char* argv[])
 {
-    char* path = "f.txt";
-
+    char str[100] = "text to send to child";
+    int pipes[2];
+    if (pipe(pipes) == -1)
+    {
+        printf("Failed to pipe\n");
+        return 1;
+    }
     pid_t child = fork(); //Zero: Returned to the newly created child process; Positive value: Returned to parent or caller. The value contains process ID of newly created child process;
 
     if (child == -1)
     {
         printf("Failed to fork child process\n");
+        closePipe(pipes);
         return 1;
     }
     int status;
     if (child == 0) //this branch runs in child process
     {
-        execl("/bin/cat", "cat", path, (char*)NULL);
-        printf("Failed to cat file\n");
+        if (read(pipes[0], str, 100) == -1)
+        {
+            perror("read");
+            closePipe(pipes);
+            return 1;
+        }
+        for (int i = 0; i < strlen(str); i++)
+        {
+            str[i] = (char)toupper(str[i]);
+        }
+        printf("Uppercase string: \"%s\" \n", str);
+        closePipe(pipes);
+
         return 1;
     }
     else //this branch runs in parent process
     {
+        if (write(pipes[1], str, strlen(str) + 1) == -1)
+        {
+            perror("write");
+            closePipe(pipes);
+            return 1;
+        }
+        printf("Sending \"%s\" \n", str);
+        closePipe(pipes);
+
         do
         {
             //(*)The waitpid() system call : It suspends execution of the calling process until a child specified by pid argument has changed state.
