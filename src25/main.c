@@ -9,8 +9,14 @@
 
 void closePipe(int* pipes)
 {
-    close(pipes[0]);
-    close(pipes[1]);
+    if(close(pipes[0]) == -1)
+    {
+        printf("Failed to close pipe[0]\n");
+    }
+    if(close(pipes[1]) == -1)
+    {
+        printf("Failed to close pipe[1]\n");
+    }
 }
 int main(int argc, char* argv[])
 {
@@ -34,7 +40,7 @@ int main(int argc, char* argv[])
     {
         if (read(pipes[0], str, 100) == -1)
         {
-            perror("read");
+            printf("Failed to read from pipe\n");
             closePipe(pipes);
             return 1;
         }
@@ -51,7 +57,7 @@ int main(int argc, char* argv[])
     {
         if (write(pipes[1], str, strlen(str) + 1) == -1)
         {
-            perror("write");
+            printf("Failed to write to pipe\n");
             closePipe(pipes);
             return 1;
         }
