@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
         closePipe(pipe);
         return 1;
     }
-
+    buf[length - 1] = '\0';
     closePipe(pipe);
 
     for(int i=0; i<length; ++i)
@@ -62,6 +62,6 @@ int main(int argc, char* argv[])
         buf[i] = toupper(buf[i]);
     }
 
-    printf("%s", buf);
+    printf("Uppercase: %s\n", buf);
     return 0;
 }
