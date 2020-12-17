@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define BUFS 256
+
 bool closePipe(FILE* pipe)
 {
     int status = pclose(pipe);
@@ -35,10 +37,31 @@ bool closePipe(FILE* pipe)
 }
 int main(int argc, char* argv[])
 {
-    char str[100] = "echo text to send to child";
+    char str[BUFS] = "echo text to send to child";
 
     FILE *pipe = popen(str, "r");
+    if (pipe == NULL)
+    {
+        printf("Failed to open pipe\n");
+        return 1;
+    }
+
+    char buf[BUFS];
+    int length = fread(buf, 1, BUFS, pipe);
+    if (length == -1)
+    {
+        printf("Failed to read from pipe\n");
+        closePipe(pipe);
+        return 1;
+    }
 
     closePipe(pipe);
+
+    for(int i=0; i<length; ++i)
+    {
+        buf[i] = toupper(buf[i]);
+    }
+
+    printf("%s", buf);
     return 0;
 }
