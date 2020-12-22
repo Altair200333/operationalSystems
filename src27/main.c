@@ -43,9 +43,9 @@ int main(int argc, char* argv[])
         return 0;
     }
     char cmd[BUFS] = "\0";
-    strcat(cmd, "grep -cv . ");
+    strcat(cmd, "grep ^$ ");
     strcat(cmd, argv[1]);
-
+    strcat(cmd, " | wc -l | xargs");
     FILE *pipe = popen(cmd, "r");
     if (pipe == NULL)
     {
