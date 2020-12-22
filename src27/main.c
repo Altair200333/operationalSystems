@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
     strcat(cmd, "grep ^$ ");
     strcat(cmd, argv[1]);
     strcat(cmd, " | wc -l | xargs");
+
     FILE *pipe = popen(cmd, "r");
     if (pipe == NULL)
     {
